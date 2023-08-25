@@ -161,7 +161,6 @@ h2 {
 
 .heart.active {
     transition: .5s;
-    /* animation: heartbeat 1s infinite; */
     font-variation-settings:
         'FILL' 1,
         'wght' 400,

@@ -15,9 +15,46 @@ function getMovies(url) {
     fetch(url).then(res => res.json()).then(data => {
         console.log(data.results);
         showMovies(data.results);
+        showFavorites(data.results);
     })
 }
 
+function removeFavorite(movie) {
+    const favoriteMovies = JSON.parse(localStorage.getItem("favoriteMovies")) || [];
+    const updatedFavorites = favoriteMovies.filter(favorite => favorite.id !== movie.id);
+
+    localStorage.setItem("favoriteMovies", JSON.stringify(updatedFavorites));
+}
+
+function addFavorite(movie) {
+    const favoriteMovies = JSON.parse(localStorage.getItem("favoriteMovies")) || [];
+    const isAlreadyFavorited = favoriteMovies.some(favorite => favorite.id === movie.id);
+
+    if (!isAlreadyFavorited) {
+        favoriteMovies.push(movie);
+        localStorage.setItem("favoriteMovies", JSON.stringify(favoriteMovies));
+    }
+}
+function showFavorites(data) {
+    const onlyFavorites = document.getElementById("checkbox");
+    const favoriteArray = JSON.parse(localStorage.getItem("favoriteMovies")) || [];
+
+    onlyFavorites.addEventListener("click", () => {
+        if (onlyFavorites.checked) {
+            const favoriteMovies = data.filter(movie => favoriteArray.some(favorite => favorite.id === movie.id));
+            showMovies(favoriteMovies);
+        } else {
+            showMovies(data);
+        }
+    });
+    const heartIcons = document.querySelectorAll(".heart");
+    heartIcons.forEach(heartIcon => {
+        const movieId = heartIcon.getAttribute("data-movie-id");
+        if (favoriteArray.some(favorite => favorite.id === parseInt(movieId))) {
+            heartIcon.classList.add("active");
+        }
+    });
+}
 
 
 function showMovies(data) {
@@ -43,7 +80,7 @@ function showMovies(data) {
                             <h3 class="score">${vote_average}</h3>
                         </div>
                         <div class="favorite">
-                            <span class="material-symbols-outlined heart">
+                            <span class="material-symbols-outlined heart" data-movie-id="${movie.id}">
                                 favorite
                             </span>
                             <h2 class="favorite-text">Favoritar</h2>
@@ -54,33 +91,23 @@ function showMovies(data) {
          `
         section.appendChild(movieElement);
         const heartIcon = movieElement.querySelector(".heart");
+        const favoriteArray = JSON.parse(localStorage.getItem("favoriteMovies")) || [];
+
+        if (favoriteArray.some(favorite => favorite.id === movie.id)) {
+            heartIcon.classList.add("active");
+        }
         heartIcon.addEventListener("click", () => {
-            if(heartIcon.classList.contains("active")) {
+            if (heartIcon.classList.contains("active")) {
                 removeFavorite(movie);
-            }else {
+            } else {
                 addFavorite(movie);
             }
             heartIcon.classList.toggle("active");
         });
-    })
-    function removeFavorite(movie) {
-        const favoriteMovies = JSON.parse(localStorage.getItem("favoriteMovies")) || [];
-        const updatedFavorites = favoriteMovies.filter(favorite => favorite.id !== movie.id);
+        
+    });
     
-        localStorage.setItem("favoriteMovies", JSON.stringify(updatedFavorites));
-    }
-
-    function addFavorite(movie) {
-        const favoriteMovies = JSON.parse(localStorage.getItem("favoriteMovies")) || [];
-        const isAlreadyFavorited = favoriteMovies.some(favorite => favorite.id === movie.id);
-
-        if (!isAlreadyFavorited) {
-            favoriteMovies.push(movie);
-            localStorage.setItem("favoriteMovies", JSON.stringify(favoriteMovies));
-        }
-    }
 }
-
 
 
 const searchIcon = document.querySelector(".search-icon");
@@ -93,8 +120,6 @@ searchIcon.addEventListener("click", () => {
         getMovies(API_URL);
     }
 });
-
-
 
 form.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') {
