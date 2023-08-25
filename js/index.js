@@ -13,13 +13,17 @@ getMovies(API_URL);
 
 function getMovies(url) {
     fetch(url).then(res => res.json()).then(data => {
+        console.log(data.results);
         showMovies(data.results);
     })
 }
 
+
+
 function showMovies(data) {
 
     section.innerHTML = '';
+
 
     data.forEach(movie => {
         const { title, poster_path, vote_average, overview } = movie;
@@ -48,19 +52,37 @@ function showMovies(data) {
                 </div>
                 <h3 class="sinopse">${overview}</h3>
          `
-
-         section.appendChild(movieElement);
-    })
-
-    const heartIcons = document.querySelectorAll(".heart");
-
-    heartIcons.forEach(heartIcon => {
+        section.appendChild(movieElement);
+        const heartIcon = movieElement.querySelector(".heart");
         heartIcon.addEventListener("click", () => {
+            if(heartIcon.classList.contains("active")) {
+                removeFavorite(movie);
+            }else {
+                addFavorite(movie);
+            }
             heartIcon.classList.toggle("active");
         });
-    });
+    })
+    function removeFavorite(movie) {
+        const favoriteMovies = JSON.parse(localStorage.getItem("favoriteMovies")) || [];
+        const updatedFavorites = favoriteMovies.filter(favorite => favorite.id !== movie.id);
     
+        localStorage.setItem("favoriteMovies", JSON.stringify(updatedFavorites));
+    }
+
+    function addFavorite(movie) {
+        const favoriteMovies = JSON.parse(localStorage.getItem("favoriteMovies")) || [];
+        const isAlreadyFavorited = favoriteMovies.some(favorite => favorite.id === movie.id);
+
+        if (!isAlreadyFavorited) {
+            favoriteMovies.push(movie);
+            localStorage.setItem("favoriteMovies", JSON.stringify(favoriteMovies));
+        }
+    }
 }
+
+
+
 const searchIcon = document.querySelector(".search-icon");
 
 searchIcon.addEventListener("click", () => {
@@ -79,13 +101,13 @@ form.addEventListener('keydown', (e) => {
         e.preventDefault();
 
         const searchTerm = search.value;
-        if(searchTerm) {
-            getMovies(searchURL+'&query='+searchTerm)
-        }else{
+        if (searchTerm) {
+            getMovies(searchURL + '&query=' + searchTerm)
+        } else {
             getMovies(API_URL);
         }
-    
+
     }
-   
+
 })
 
